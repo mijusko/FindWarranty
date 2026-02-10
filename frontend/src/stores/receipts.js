@@ -55,5 +55,34 @@ export const useReceiptStore = defineStore('receipts', () => {
     }
   };
 
-  return { receipts, fetchReceipts, createReceipt, deleteReceipt };
+  const updateReceipt = async (id, formData) => {
+    try {
+      // If we're updating, we might not want to change the userId
+      // but the backend might expect it
+      if (auth.user) {
+        formData.append('userId', auth.user.id);
+      }
+      
+      const response = await fetch(`${API_URL}/api/receipts/${id}`, {
+        method: 'PUT',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const updated = await response.json();
+        const index = receipts.value.findIndex(r => r.id === id);
+        if (index !== -1) {
+          receipts.value[index] = updated;
+        }
+        return { success: true };
+      } else {
+        const errorText = await response.text();
+        return { success: false, error: errorText };
+      }
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  };
+
+  return { receipts, fetchReceipts, createReceipt, deleteReceipt, updateReceipt };
 });

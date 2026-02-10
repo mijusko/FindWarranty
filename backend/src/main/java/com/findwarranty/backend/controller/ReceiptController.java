@@ -84,6 +84,46 @@ public class ReceiptController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateReceipt(
+            @PathVariable Long id,
+            @RequestParam("storeName") String storeName,
+            @RequestParam("productName") String productName,
+            @RequestParam("purchaseDate") String purchaseDateStr,
+            @RequestParam("price") BigDecimal price,
+            @RequestParam("category") String category,
+            @RequestParam("warrantyDuration") String warrantyDuration,
+            @RequestParam(value = "file", required = false) MultipartFile file
+    ) {
+        try {
+            Receipt receipt = receiptRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Receipt not found"));
+
+            receipt.setStoreName(storeName);
+            receipt.setProductName(productName);
+            
+            LocalDate purchaseDate = LocalDate.parse(purchaseDateStr);
+            receipt.setPurchaseDate(purchaseDate);
+            receipt.setPrice(price);
+            receipt.setCategory(category);
+            receipt.setWarrantyDuration(warrantyDuration);
+
+            // Recalculate expiry
+            LocalDate expiryDate = calculateExpiry(purchaseDate, warrantyDuration);
+            receipt.setWarrantyExpiryDate(expiryDate);
+
+            if (file != null && !file.isEmpty()) {
+                receipt.setPdfData(file.getBytes());
+            }
+
+            Receipt saved = receiptRepository.save(receipt);
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error updating receipt: " + e.getMessage());
+        }
+    }
+
     private LocalDate calculateExpiry(LocalDate start, String duration) {
         if (start == null) return null;
         switch (duration.toLowerCase()) {

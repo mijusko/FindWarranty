@@ -5,6 +5,7 @@ import { useReceiptStore } from '../stores/receipts';
 import { jsPDF } from 'jspdf';
 import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.css';
+import { Camera, FileUp, CheckCircle } from 'lucide-vue-next';
 
 const router = useRouter();
 const store = useReceiptStore();
@@ -21,6 +22,7 @@ const form = ref({
 const imagePreview = ref(null); // Used for cropping UI
 const processedPreview = ref(null); // Used for final B/W preview
 const pdfFile = ref(null);
+const fileName = ref('');
 const isProcessing = ref(false);
 const showCropper = ref(false);
 const isCropperReady = ref(false);
@@ -30,19 +32,33 @@ const cropperInstance = ref(null);
 const categories = ['Electronics', 'Clothing & Footwear', 'Groceries', 'Home & Garden', 'Other'];
 const warranties = ['6 Months', '1 Year', '2 Years', '3 Years', '5 Years', 'Lifetime', 'Other'];
 
+const handlePdfUpload = (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  if (file.type !== 'application/pdf') {
+    alert('Please upload a PDF file');
+    return;
+  }
+
+  pdfFile.value = file;
+  fileName.value = file.name;
+  processedPreview.value = null; // Clear image preview if PDF uploaded
+};
+
 const handleImageUpload = (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
   processedPreview.value = null;
   pdfFile.value = null;
+  fileName.value = file.name;
   isCropperReady.value = false;
 
   const reader = new FileReader();
   reader.onload = (e) => {
     imagePreview.value = e.target.result;
     showCropper.value = true;
-    // Initialization will happen via @load on the img tag
   };
   reader.readAsDataURL(file);
 };
@@ -248,15 +264,19 @@ const handleSubmit = async () => {
     <h1 class="mb-4">Add Receipt</h1>
     
     <!-- Cropper Modal -->
-    <div v-if="showCropper" class="fixed inset-0 z-50 bg-black flex flex-col">
-      <div class="flex-1 relative bg-black flex items-center justify-center p-4 cropper-container-wrapper">
-        <img ref="cropperImgRef" :src="imagePreview" class="max-w-full max-h-full block" @load="initCropper" />
-      </div>
-      <div class="p-4 bg-darker flex justify-between gap-4">
-        <button @click="cancelCrop" type="button" class="secondary w-full" :disabled="isProcessing">Cancel</button>
-        <button @click="confirmCrop" type="button" class="primary w-full" :disabled="!isCropperReady || isProcessing">
-          {{ isProcessing ? 'Processing...' : (isCropperReady ? 'Save PDF' : 'Loading...') }}
-        </button>
+    <div v-if="showCropper" class="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black/95 backdrop-blur-md">
+      <div class="bg-darker w-full max-w-4xl max-h-[98vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-800">
+        <!-- Actions moved to top as requested -->
+        <div class="p-4 bg-darker flex justify-between gap-3 border-b border-gray-800">
+          <button @click="cancelCrop" type="button" class="secondary px-6" :disabled="isProcessing">Cancel</button>
+          <button @click="confirmCrop" type="button" class="primary px-8" :disabled="!isCropperReady || isProcessing">
+            {{ isProcessing ? 'Processing...' : (isCropperReady ? 'Save Selection' : 'Loading...') }}
+          </button>
+        </div>
+        
+        <div class="flex-1 relative bg-black min-h-[300px] overflow-hidden cropper-container-wrapper">
+          <img ref="cropperImgRef" :src="imagePreview" class="block max-w-full" @load="initCropper" />
+        </div>
       </div>
     </div>
 
@@ -296,16 +316,43 @@ const handleSubmit = async () => {
         </select>
       </div>
 
-      <div class="card bg-darker p-4">
-        <label class="block mb-2 font-bold">Receipt Image</label>
-        <input type="file" accept="image/*" capture="environment" @change="handleImageUpload" class="mb-2" />
+      <div class="card bg-darker p-5 border border-gray-800">
+        <label class="block mb-4 font-bold text-lg">Receipt Document</label>
         
-        <div v-if="processedPreview" class="preview-box mt-2">
-          <p class="text-xs text-gray-400 mb-1">Scanned Preview:</p>
-          <img :src="processedPreview" alt="Processed Preview" class="w-full rounded border border-gray-600" />
-          <p class="text-center mt-2 text-green-400 font-bold">PDF Ready</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <!-- Camera / Photo Option -->
+          <label class="upload-option">
+            <input type="file" accept="image/*" capture="environment" @change="handleImageUpload" class="hidden" />
+            <div class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
+              <Camera class="text-primary" size="32" />
+              <span class="font-medium">Take Photo</span>
+              <span class="text-xs text-muted">Use camera</span>
+            </div>
+          </label>
+
+          <!-- PDF / File Option -->
+          <label class="upload-option">
+            <input type="file" accept="application/pdf" @change="handlePdfUpload" class="hidden" />
+            <div class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
+              <FileUp class="text-primary" size="32" />
+              <span class="font-medium">Upload PDF</span>
+              <span class="text-xs text-muted">Select file</span>
+            </div>
+          </label>
         </div>
-        <p v-if="isProcessing" class="text-center mt-2 text-primary">Processing...</p>
+        
+        <!-- Status Indicator -->
+        <div v-if="pdfFile" class="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400">
+          <CheckCircle size="18" />
+          <span class="text-sm font-medium truncate">Ready: {{ fileName }}</span>
+        </div>
+
+        <div v-if="processedPreview" class="preview-box mt-4">
+          <p class="text-xs text-gray-400 mb-2">Scanned Image Preview:</p>
+          <img :src="processedPreview" alt="Processed Preview" class="w-full rounded-lg border border-gray-700 shadow-lg" />
+        </div>
+        
+        <p v-if="isProcessing" class="text-center mt-4 text-primary animate-pulse">Processing document...</p>
       </div>
 
       <button type="submit" class="primary py-3 text-lg" :disabled="isProcessing || showCropper || !pdfFile">
@@ -319,7 +366,14 @@ const handleSubmit = async () => {
 .cropper-container-wrapper {
   width: 100%;
   height: 100%;
-  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:deep(.cropper-container) {
+  width: 100% !important;
+  height: 100% !important;
 }
 img {
   max-width: 100%;

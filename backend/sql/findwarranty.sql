@@ -1,3 +1,0 @@
-CREATE USER "admin" WITH PASSWORD '1234';
-CREATE DATABASE findwarranty OWNER "admin";
-GRANT ALL PRIVILEGES ON DATABASE findwarranty TO "admin";
