@@ -5,7 +5,7 @@ import { useReceiptStore } from '../stores/receipts';
 import { jsPDF } from 'jspdf';
 import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.css';
-import { Camera, FileUp, CheckCircle } from 'lucide-vue-next';
+import { Camera, FileUp, CheckCircle, Image as ImageIcon } from 'lucide-vue-next';
 
 const router = useRouter();
 const store = useReceiptStore();
@@ -317,26 +317,33 @@ const handleSubmit = async () => {
       </div>
 
       <div class="card bg-darker p-5 border border-gray-800">
-        <label class="block mb-4 font-bold text-lg">Receipt Document</label>
+        <label class="block mb-4 font-bold text-lg">Receipt Document (Optional)</label>
         
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-          <!-- Camera / Photo Option -->
+        <div class="grid grid-cols-3 gap-2 sm:gap-4 mb-4">
+          <!-- Take Photo (Camera) -->
           <label class="upload-option">
             <input type="file" accept="image/*" capture="environment" @change="handleImageUpload" class="hidden" />
-            <div class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
-              <Camera class="text-primary" size="32" />
-              <span class="font-medium">Take Photo</span>
-              <span class="text-xs text-muted">Use camera</span>
+            <div class="flex flex-col items-center gap-2 p-2 sm:p-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer text-center">
+              <Camera class="text-primary" size="24" />
+              <span class="text-[10px] sm:text-xs font-medium">Camera</span>
             </div>
           </label>
 
-          <!-- PDF / File Option -->
+          <!-- Upload Photo (Gallery) -->
+          <label class="upload-option">
+            <input type="file" accept="image/*" @change="handleImageUpload" class="hidden" />
+            <div class="flex flex-col items-center gap-2 p-2 sm:p-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer text-center">
+              <ImageIcon class="text-primary" size="24" />
+              <span class="text-[10px] sm:text-xs font-medium">Photo</span>
+            </div>
+          </label>
+
+          <!-- PDF Option -->
           <label class="upload-option">
             <input type="file" accept="application/pdf" @change="handlePdfUpload" class="hidden" />
-            <div class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
-              <FileUp class="text-primary" size="32" />
-              <span class="font-medium">Upload PDF</span>
-              <span class="text-xs text-muted">Select file</span>
+            <div class="flex flex-col items-center gap-2 p-2 sm:p-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer text-center">
+              <FileUp class="text-primary" size="24" />
+              <span class="text-[10px] sm:text-xs font-medium">PDF</span>
             </div>
           </label>
         </div>
@@ -355,7 +362,7 @@ const handleSubmit = async () => {
         <p v-if="isProcessing" class="text-center mt-4 text-primary animate-pulse">Processing document...</p>
       </div>
 
-      <button type="submit" class="primary py-3 text-lg" :disabled="isProcessing || showCropper || !pdfFile">
+      <button type="submit" class="primary py-3 text-lg" :disabled="isProcessing || showCropper">
         Save Receipt
       </button>
     </form>
