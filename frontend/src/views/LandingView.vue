@@ -130,25 +130,18 @@ const installIos = () => {
 </template>
 
 <style scoped>
-:root {
-  --color-android: #3DDC84;
-}
-
-.bg-android { background-color: #3DDC84; }
-.text-android { color: #3DDC84; }
-
 .landing {
   min-height: 100vh;
-  background: radial-gradient(circle at top, #1e293b, var(--color-bg));
+  background: radial-gradient(circle at top, #1e293b, #020617);
 }
 .title {
   font-size: 3rem;
-  color: var(--color-primary);
+  color: #3b82f6;
   margin-bottom: 1rem;
 }
 .subtitle {
   font-size: 1.25rem;
-  color: var(--color-text-muted);
+  color: #94a3b8;
   max-width: 600px;
   margin: 0 auto;
 }
