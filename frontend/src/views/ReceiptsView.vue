@@ -300,16 +300,16 @@ const isSoon = (dateStr) => {
 
 <style scoped>
 .receipt-row-card {
-  background: #2a2a2a; /* Svetlija nijansa od standardne dark pozadine */
+  background: var(--color-surface); /* Plava boja kao sidebar/navbar */
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border);
   transition: all 0.2s ease;
   overflow: hidden;
 }
 
 .receipt-row-card:hover {
-  background: #333333;
-  border-color: var(--color-primary-soft);
+  background: #1e293b; /* Malo svetlija nijansa plave za hover */
+  border-color: var(--color-primary);
   transform: translateX(4px);
 }
 

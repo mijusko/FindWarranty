@@ -321,31 +321,31 @@ const handleSubmit = async () => {
         
         <div class="grid grid-cols-3 gap-2 sm:gap-4 mb-4">
           <!-- Take Photo (Camera) -->
-          <label class="upload-option">
-            <input type="file" accept="image/*" capture="environment" @change="handleImageUpload" class="hidden" />
-            <div class="flex flex-col items-center gap-2 p-2 sm:p-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer text-center">
+          <div class="upload-option">
+            <button type="button" @click="$refs.cameraInput.click()" class="w-full flex flex-col items-center gap-2 p-2 sm:p-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer text-center bg-transparent">
               <Camera class="text-primary" size="24" />
               <span class="text-[10px] sm:text-xs font-medium">Camera</span>
-            </div>
-          </label>
+            </button>
+            <input type="file" ref="cameraInput" accept="image/*" capture="environment" @change="handleImageUpload" class="hidden" />
+          </div>
 
           <!-- Upload Photo (Gallery) -->
-          <label class="upload-option">
-            <input type="file" accept="image/*" @change="handleImageUpload" class="hidden" />
-            <div class="flex flex-col items-center gap-2 p-2 sm:p-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer text-center">
+          <div class="upload-option">
+            <button type="button" @click="$refs.photoInput.click()" class="w-full flex flex-col items-center gap-2 p-2 sm:p-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer text-center bg-transparent">
               <ImageIcon class="text-primary" size="24" />
               <span class="text-[10px] sm:text-xs font-medium">Photo</span>
-            </div>
-          </label>
+            </button>
+            <input type="file" ref="photoInput" accept="image/*" @change="handleImageUpload" class="hidden" />
+          </div>
 
           <!-- PDF Option -->
-          <label class="upload-option">
-            <input type="file" accept="application/pdf" @change="handlePdfUpload" class="hidden" />
-            <div class="flex flex-col items-center gap-2 p-2 sm:p-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer text-center">
+          <div class="upload-option">
+            <button type="button" @click="$refs.pdfInput.click()" class="w-full flex flex-col items-center gap-2 p-2 sm:p-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer text-center bg-transparent">
               <FileUp class="text-primary" size="24" />
               <span class="text-[10px] sm:text-xs font-medium">PDF</span>
-            </div>
-          </label>
+            </button>
+            <input type="file" ref="pdfInput" accept="application/pdf" @change="handlePdfUpload" class="hidden" />
+          </div>
         </div>
         
         <!-- Status Indicator -->

@@ -1,9 +1,20 @@
 <script setup>
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import { onMounted, ref } from 'vue';
+import { Smartphone, Apple } from 'lucide-vue-next';
 
 const router = useRouter();
 const auth = useAuthStore();
+
+const deferredPrompt = ref(null);
+
+onMounted(() => {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt.value = e;
+  });
+});
 
 const handleGetStarted = () => {
   if (auth.user) {
@@ -11,6 +22,38 @@ const handleGetStarted = () => {
   } else {
     router.push('/register');
   }
+};
+
+const installAndroid = async () => {
+  const ua = navigator.userAgent.toLowerCase();
+  const isAndroid = ua.indexOf("android") > -1;
+
+  if (!isAndroid) {
+    alert("This device is not an Android.");
+    return;
+  }
+
+  if (deferredPrompt.value) {
+    deferredPrompt.value.prompt();
+    const { outcome } = await deferredPrompt.value.userChoice;
+    if (outcome === 'accepted') {
+      deferredPrompt.value = null;
+    }
+  } else {
+    alert("Please use Chrome/Edge and look for the install icon in the address bar if this button doesn't work.");
+  }
+};
+
+const installIos = () => {
+  const ua = navigator.userAgent.toLowerCase();
+  const isIos = /iphone|ipad|ipod/.test(ua);
+
+  if (!isIos) {
+    alert("This device is not an iPhone.");
+    return;
+  }
+
+  alert("To install on iOS: \n1. Tap the 'Share' icon (square with arrow up) \n2. Scroll down and tap 'Add to Home Screen' \n3. Tap 'Add'");
 };
 </script>
 
@@ -23,9 +66,24 @@ const handleGetStarted = () => {
         <!-- Placeholder for image -->
         <div class="placeholder-img">📦 🧾 🛡️</div>
       </div>
-      <button @click="handleGetStarted" class="primary text-lg px-8 py-3">
-        Get Started
-      </button>
+      
+      <div class="flex flex-col gap-4 items-center">
+        <button @click="handleGetStarted" class="primary text-lg px-12 py-4 w-64">
+          Get Started
+        </button>
+
+        <div class="flex flex-col sm:flex-row gap-3 mt-4">
+          <button @click="installAndroid" class="install-btn android-btn">
+            <Smartphone size="20" />
+            <span>Install Android</span>
+          </button>
+          
+          <button @click="installIos" class="install-btn ios-btn">
+            <Apple size="20" />
+            <span>Install iOS</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -52,5 +110,34 @@ const handleGetStarted = () => {
   background: rgba(255,255,255,0.05);
   border-radius: 20px;
   display: inline-block;
+}
+
+.install-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  width: 200px;
+  transition: all 0.2s;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.install-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.android-btn {
+  color: #3DDC84; /* Android green */
+  border-color: rgba(61, 220, 132, 0.2);
+}
+
+.ios-btn {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
 }
 </style>
