@@ -2,14 +2,12 @@
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { onMounted, ref } from 'vue';
-import { Smartphone, Apple, X, Share, PlusSquare, ArrowUpCircle } from 'lucide-vue-next';
+import { Smartphone, Apple } from 'lucide-vue-next';
 
 const router = useRouter();
 const auth = useAuthStore();
 
 const deferredPrompt = ref(null);
-const showAndroidModal = ref(false);
-const showIosModal = ref(false);
 
 onMounted(() => {
   window.addEventListener('beforeinstallprompt', (e) => {
@@ -55,12 +53,12 @@ const installIos = () => {
     return;
   }
 
-  showIosModal.value = true;
+  alert("To install on iOS: \n1. Tap the 'Share' icon (square with arrow up) \n2. Scroll down and tap 'Add to Home Screen' \n3. Tap 'Add'");
 };
 </script>
 
 <template>
-  <div class="landing flex flex-col items-center justify-center relative overflow-hidden">
+  <div class="landing flex flex-col items-center justify-center">
     <div class="content text-center p-4">
       <h1 class="title">FindWarranty</h1>
       <p class="subtitle">Never lose a receipt again. Track your warranties effortlessly.</p>
@@ -87,61 +85,22 @@ const installIos = () => {
         </div>
       </div>
     </div>
-
-    <!-- iOS Install Modal -->
-    <div v-if="showIosModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div class="bg-darker w-full max-w-sm rounded-3xl p-8 border border-gray-800 shadow-2xl mb-4 sm:mb-0">
-        <div class="flex justify-between items-start mb-6">
-          <div class="p-3 bg-white/10 rounded-2xl">
-            <Apple class="text-white" size="32" />
-          </div>
-          <button @click="showIosModal = false" class="p-2 hover:bg-white/5 rounded-full">
-            <X size="24" />
-          </button>
-        </div>
-        
-        <h3 class="text-2xl font-bold mb-6">Install on iPhone</h3>
-        
-        <div class="space-y-6">
-          <div class="flex items-center gap-4">
-            <div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center shrink-0 border border-white/10">1</div>
-            <p class="text-gray-300">Tap the <span class="inline-flex items-center px-2 py-1 bg-white/10 rounded text-white mx-1"><Share size="16" class="mr-1"/> Share</span> button in Safari.</p>
-          </div>
-          
-          <div class="flex items-center gap-4">
-            <div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center shrink-0 border border-white/10">2</div>
-            <p class="text-gray-300">Scroll down and select <span class="inline-flex items-center px-2 py-1 bg-white/10 rounded text-white mx-1"><PlusSquare size="16" class="mr-1"/> Add to Home Screen</span>.</p>
-          </div>
-
-          <div class="flex items-center gap-4">
-            <div class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center shrink-0 border border-white/10">3</div>
-            <p class="text-gray-300">Tap <span class="text-primary font-bold">Add</span> in the top right corner.</p>
-          </div>
-        </div>
-
-        <div class="mt-10 pt-6 border-t border-gray-800 text-center">
-          <p class="text-xs text-gray-500 flex items-center justify-center gap-2">
-            Look for this icon <ArrowUpCircle size="14" /> at the bottom
-          </p>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <style scoped>
 .landing {
   min-height: 100vh;
-  background: radial-gradient(circle at top, #1e293b, #020617);
+  background: radial-gradient(circle at top, #1e293b, var(--color-bg));
 }
 .title {
   font-size: 3rem;
-  color: #3b82f6;
+  color: var(--color-primary);
   margin-bottom: 1rem;
 }
 .subtitle {
   font-size: 1.25rem;
-  color: #94a3b8;
+  color: var(--color-text-muted);
   max-width: 600px;
   margin: 0 auto;
 }

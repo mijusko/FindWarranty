@@ -1,6 +1,7 @@
 package com.findwarranty.backend.model;
 
 import jakarta.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
