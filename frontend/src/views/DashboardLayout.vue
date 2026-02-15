@@ -1,156 +1,154 @@
 <script setup>
-import { RouterView, RouterLink } from 'vue-router';
-import { Receipt, PlusCircle, User } from 'lucide-vue-next';
+import { RouterView, useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
-import { useRouter } from 'vue-router';
+import { 
+  Home, 
+  Receipt, 
+  PlusCircle, 
+  BarChart2, 
+  User, 
+  LogOut 
+} from 'lucide-vue-next';
 
 const auth = useAuthStore();
 const router = useRouter();
+const route = useRoute();
 
-const logout = () => {
+const handleLogout = () => {
   auth.logout();
-  router.push('/');
+  router.push('/login');
 };
+
+const isActive = (path) => route.path === path;
 </script>
 
 <template>
-  <div class="dashboard-layout">
-    <!-- Desktop Sidebar -->
-    <nav class="sidebar hidden md-flex">
-      <div class="logo">FW</div>
-      <div class="nav-links">
-        <RouterLink to="/receipts" class="nav-item">
-          <Receipt /> <span>Receipts</span>
-        </RouterLink>
-        <RouterLink to="/create" class="nav-item">
-          <PlusCircle /> <span>Create</span>
-        </RouterLink>
-        <RouterLink to="/stats" class="nav-item">
-          <User /> <span>Profile</span>
-        </RouterLink>
+  <div class="dashboard-layout flex h-screen bg-[#09130f] text-white overflow-hidden">
+    
+    <!-- Sidebar (Desktop) -->
+    <aside class="hidden lg:flex flex-col w-64 border-r border-white/10 p-6 glass-sidebar">
+      <div class="flex items-center gap-3 mb-10 px-2">
+        <div class="bg-primary/20 p-2 rounded-lg">
+           <Receipt class="text-primary" />
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight">RISY</h1>
       </div>
-      <button @click="logout" class="logout-btn">Logout</button>
-    </nav>
+      
+      <nav class="flex-1 flex flex-col gap-2">
+        <router-link to="/receipts" class="nav-item" :class="{ active: isActive('/receipts') }">
+          <Receipt size="20" />
+          <span>My Receipts</span>
+        </router-link>
+        
+        <router-link to="/create" class="nav-item" :class="{ active: isActive('/create') }">
+          <PlusCircle size="20" />
+          <span>Add Receipt</span>
+        </router-link>
+
+        <router-link to="/stats" class="nav-item" :class="{ active: isActive('/stats') }">
+          <BarChart2 size="20" />
+          <span>Statistics</span>
+        </router-link>
+
+        <div class="mt-auto">
+          <button @click="handleLogout" class="nav-item w-full text-left text-red-400 hover:text-red-300 hover:bg-red-500/10">
+            <LogOut size="20" />
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </nav>
+    </aside>
 
     <!-- Main Content -->
-    <main class="content-area">
-      <RouterView />
+    <main class="flex-1 overflow-y-auto relative">
+      <!-- Header Mobile -->
+      <div class="lg:hidden flex justify-between items-center p-4 sticky top-0 bg-[#09130f]/80 backdrop-blur-md z-30">
+        <h1 class="font-bold text-lg">RISY</h1>
+        <div class="w-8 h-8 bg-gray-700 rounded-full overflow-hidden">
+           <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Avatar" />
+        </div>
+      </div>
+
+      <div class="max-w-3xl mx-auto w-full">
+        <RouterView />
+      </div>
     </main>
 
-    <!-- Mobile Bottom Bar -->
-    <nav class="bottom-bar md-hidden">
-      <RouterLink to="/receipts" class="nav-item">
-        <Receipt />
-        <span class="text-xs">Receipts</span>
-      </RouterLink>
-      <RouterLink to="/create" class="nav-item create-btn">
-        <PlusCircle :size="32" />
-      </RouterLink>
-      <RouterLink to="/stats" class="nav-item">
-        <User />
-        <span class="text-xs">Profile</span>
-      </RouterLink>
+    <!-- Bottom Navigation (Mobile) -->
+    <nav class="lg:hidden fixed bottom-6 left-6 right-6 bg-[#12281e]/90 backdrop-blur-lg border border-white/10 rounded-2xl flex justify-between items-center px-6 py-4 shadow-2xl z-40">
+      <router-link to="/receipts" class="mobile-nav-item" :class="{ active: isActive('/receipts') }">
+        <Home size="24" />
+      </router-link>
+      
+      <router-link to="/stats" class="mobile-nav-item" :class="{ active: isActive('/stats') }">
+        <Receipt size="24" />
+      </router-link>
+
+      <!-- FAB (Floating Action Button) Center -->
+      <router-link to="/create" class="mobile-fab">
+        <PlusCircle size="32" class="text-black" />
+      </router-link>
+
+      <router-link to="/profile" class="mobile-nav-item" :class="{ active: isActive('/profile') }">
+        <BarChart2 size="24" />
+      </router-link>
+
+      <button @click="handleLogout" class="mobile-nav-item text-gray-500">
+        <User size="24" />
+      </button>
     </nav>
+
   </div>
 </template>
 
 <style scoped>
-.dashboard-layout {
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-}
-
-.content-area {
-  flex: 1;
-  overflow-y: auto;
-  padding-bottom: 80px; /* Space for bottom bar */
-}
-
-/* Desktop Sidebar */
-.sidebar {
-  width: 250px;
-  background-color: var(--color-surface);
-  border-right: 1px solid var(--color-border);
-  display: flex;
-  flex-direction: column;
-  padding: 1rem;
-}
-
-.logo {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--color-primary);
-  margin-bottom: 2rem;
-  text-align: center;
-}
-
-.nav-links {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  flex: 1;
-}
-
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  border-radius: 8px;
-  color: var(--color-text-muted);
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+  transition: all 0.2s;
+  text-decoration: none;
 }
 
-.nav-item:hover, .nav-item.router-link-active {
-  background-color: rgba(56, 189, 248, 0.1);
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+.nav-item.active {
+  background: rgba(0, 255, 102, 0.1);
   color: var(--color-primary);
 }
 
-.logout-btn {
-  margin-top: auto;
+.mobile-nav-item {
+  color: #64748b;
+  transition: color 0.2s;
 }
 
-/* Mobile Bottom Bar */
-.bottom-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 60px;
-  background-color: var(--color-surface);
-  border-top: 1px solid var(--color-border);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  z-index: 100;
+.mobile-nav-item.active {
+  color: var(--color-primary);
 }
 
-.bottom-bar .nav-item {
-  flex-direction: column;
-  gap: 0;
-  padding: 0.5rem;
-  font-size: 0.8rem;
-}
-
-.create-btn {
-  color: var(--color-primary) !important;
-  transform: translateY(-10px);
-  background-color: var(--color-surface);
+.mobile-fab {
+  background: var(--color-primary);
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  padding: 0.5rem;
-  border: 1px solid var(--color-border);
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(0, 255, 102, 0.4);
+  transform: translateY(-20px);
+  border: 4px solid #09130f; /* Match bg to create gap effect */
 }
 
-/* Responsive Utilities */
-.md-hidden { display: flex; }
-.hidden { display: none; }
-.md-flex { display: none; }
-
-@media (min-width: 768px) {
-  .md-hidden { display: none; }
-  .md-flex { display: flex; }
-  .content-area { padding-bottom: 0; }
+/* Glass Sidebar */
+.glass-sidebar {
+  background: rgba(18, 40, 30, 0.4);
+  backdrop-filter: blur(20px);
 }
 </style>

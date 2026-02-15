@@ -5,7 +5,7 @@ import { useReceiptStore } from '../stores/receipts';
 import { jsPDF } from 'jspdf';
 import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.css';
-import { Camera, FileUp, CheckCircle, Image as ImageIcon } from 'lucide-vue-next';
+import { Camera, FileUp, CheckCircle, Image as ImageIcon, ArrowLeft, Image, FileText, X, Receipt, Save, Calendar } from 'lucide-vue-next';
 
 const router = useRouter();
 const store = useReceiptStore();
@@ -29,10 +29,46 @@ const isCropperReady = ref(false);
 const cropperImgRef = ref(null);
 const cropperInstance = ref(null);
 
+// Additional refs for file inputs
+const fileInput = ref(null);
+const cameraInput = ref(null);
+const pdfInput = ref(null);
+const previewImage = ref(null); // To display the chosen image
+const originalImage = ref(null); // For cropper
+
 const categories = ['Electronics', 'Clothing & Footwear', 'Groceries', 'Home & Garden', 'Other'];
 const warranties = ['6 Months', '1 Year', '2 Years', '3 Years', '5 Years', 'Lifetime', 'Other'];
 
-const handlePdfUpload = (event) => {
+const triggerFileInput = (type) => {
+  if (type === 'image') fileInput.value.click();
+  else if (type === 'pdf') pdfInput.value.click();
+};
+
+const triggerCamera = () => {
+  cameraInput.value.click();
+};
+
+const handleFileChange = (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Reset states
+  pdfFile.value = null;
+  processedPreview.value = null;
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    originalImage.value = e.target.result;
+    showCropper.value = true;
+    // Wait for DOM update to ensure image element is rendered
+    nextTick(() => {
+        initCropper();
+    });
+  };
+  reader.readAsDataURL(file);
+};
+
+const handlePdfChange = (event) => {
   const file = event.target.files[0];
   if (!file) return;
   
@@ -43,24 +79,15 @@ const handlePdfUpload = (event) => {
 
   pdfFile.value = file;
   fileName.value = file.name;
-  processedPreview.value = null; // Clear image preview if PDF uploaded
+  processedPreview.value = null; 
+  previewImage.value = null;
 };
 
-const handleImageUpload = (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  processedPreview.value = null;
-  pdfFile.value = null;
-  fileName.value = file.name;
-  isCropperReady.value = false;
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    imagePreview.value = e.target.result;
-    showCropper.value = true;
-  };
-  reader.readAsDataURL(file);
+const clearAttachment = () => {
+    previewImage.value = null;
+    pdfFile.value = null;
+    processedPreview.value = null;
+    fileName.value = '';
 };
 
 const initCropper = () => {
@@ -104,14 +131,14 @@ const initCropper = () => {
 
 const cancelCrop = () => {
   showCropper.value = false;
-  imagePreview.value = null;
+  originalImage.value = null;
   if (cropperInstance.value) {
     cropperInstance.value.destroy();
     cropperInstance.value = null;
   }
 };
 
-const confirmCrop = async () => {
+const cropImage = async () => {
   if (!cropperInstance.value || !isCropperReady.value) {
     console.error('Cropper not ready or instance missing');
     return;
@@ -200,14 +227,14 @@ const confirmCrop = async () => {
     sharpenImage(ctx, canvas.width, canvas.height);
     
     // Show processed preview (Increased quality)
-    processedPreview.value = canvas.toDataURL('image/jpeg', 0.95);
+    previewImage.value = canvas.toDataURL('image/jpeg', 0.95);
     
     // Generate PDF (Higher quality settings)
     const pdf = new jsPDF();
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
     
-    pdf.addImage(processedPreview.value, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+    pdf.addImage(previewImage.value, 'JPEG', 0, 0, pdfWidth, pdfHeight);
     const pdfBlob = pdf.output('blob');
     
     pdfFile.value = new File([pdfBlob], "receipt.pdf", { type: "application/pdf" });
@@ -260,130 +287,196 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <div class="container max-w-lg">
-    <h1 class="mb-4">Add Receipt</h1>
-    
-    <!-- Cropper Modal -->
-    <div v-if="showCropper" class="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black/95 backdrop-blur-md">
-      <div class="bg-darker w-full max-w-4xl max-h-[98vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-800">
-        <!-- Actions moved to top as requested -->
-        <div class="p-4 bg-darker flex justify-between gap-3 border-b border-gray-800">
-          <button @click="cancelCrop" type="button" class="secondary px-6" :disabled="isProcessing">Cancel</button>
-          <button @click="confirmCrop" type="button" class="primary px-8" :disabled="!isCropperReady || isProcessing">
-            {{ isProcessing ? 'Processing...' : (isCropperReady ? 'Save Selection' : 'Loading...') }}
-          </button>
-        </div>
-        
-        <div class="flex-1 relative bg-black min-h-[300px] overflow-hidden cropper-container-wrapper">
-          <img ref="cropperImgRef" :src="imagePreview" class="block max-w-full" @load="initCropper" />
-        </div>
-      </div>
+  <div class="create-receipt p-6 pb-24 max-w-lg mx-auto">
+    <!-- Header -->
+    <div class="flex items-center gap-4 mb-6">
+      <button @click="$router.back()" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors">
+        <ArrowLeft size="20" />
+      </button>
+      <h1 class="text-xl font-bold text-white">Add New Receipt</h1>
     </div>
 
-    <form @submit.prevent="handleSubmit" class="flex flex-col gap-4">
-      <div>
-        <label>Store Name</label>
-        <input v-model="form.storeName" required placeholder="e.g. Best Buy" />
-      </div>
+    <form @submit.prevent="handleSubmit" class="flex flex-col gap-5">
       
-      <div>
-        <label>Product Name</label>
-        <input v-model="form.productName" required placeholder="e.g. Laptop" />
-      </div>
-      
-      <div class="flex gap-4">
-        <div class="w-full">
-          <label>Date</label>
-          <input v-model="form.purchaseDate" type="date" required />
-        </div>
-        <div class="w-full">
-          <label>Price</label>
-          <input v-model="form.price" type="number" step="0.01" required placeholder="0.00" />
-        </div>
-      </div>
-      
-      <div>
-        <label>Category</label>
-        <select v-model="form.category">
-          <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
-        </select>
+      <!-- Store Name -->
+      <div class="form-group">
+        <label class="text-xs font-medium text-gray-400 ml-1 mb-1 block">Store Name</label>
+        <input 
+          v-model="form.storeName" 
+          type="text" 
+          placeholder="Apple Store, Starbucks, etc." 
+          required
+          class="bg-white text-gray-900 placeholder-gray-400 rounded-xl px-4 py-3 w-full border-none focus:ring-2 focus:ring-primary"
+        />
       </div>
 
-      <div>
-        <label>Warranty Duration</label>
-        <select v-model="form.warrantyDuration">
-          <option v-for="dur in warranties" :key="dur" :value="dur">{{ dur }}</option>
-        </select>
+      <!-- Product Name -->
+      <div class="form-group">
+        <label class="text-xs font-medium text-gray-400 ml-1 mb-1 block">Product Name</label>
+        <input 
+          v-model="form.productName" 
+          type="text" 
+          placeholder="iPhone 15 Pro, Coffee Latte" 
+          required
+          class="bg-white text-gray-900 placeholder-gray-400 rounded-xl px-4 py-3 w-full border-none focus:ring-2 focus:ring-primary"
+        />
       </div>
 
-      <div class="card bg-darker p-5 border border-gray-800">
-        <label class="block mb-4 font-bold text-lg">Receipt Document (Optional)</label>
-        
-        <div class="grid grid-cols-3 gap-2 sm:gap-4 mb-4">
-          <!-- Take Photo (Camera) -->
-          <div class="upload-option">
-            <button type="button" @click="$refs.cameraInput.click()" class="w-full flex flex-col items-center gap-2 p-2 sm:p-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer text-center bg-transparent">
-              <Camera class="text-primary" size="24" />
-              <span class="text-[10px] sm:text-xs font-medium">Camera</span>
-            </button>
-            <input type="file" ref="cameraInput" accept="image/*" capture="environment" @change="handleImageUpload" class="hidden" />
-          </div>
-
-          <!-- Upload Photo (Gallery) -->
-          <div class="upload-option">
-            <button type="button" @click="$refs.photoInput.click()" class="w-full flex flex-col items-center gap-2 p-2 sm:p-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer text-center bg-transparent">
-              <ImageIcon class="text-primary" size="24" />
-              <span class="text-[10px] sm:text-xs font-medium">Photo</span>
-            </button>
-            <input type="file" ref="photoInput" accept="image/*" @change="handleImageUpload" class="hidden" />
-          </div>
-
-          <!-- PDF Option -->
-          <div class="upload-option">
-            <button type="button" @click="$refs.pdfInput.click()" class="w-full flex flex-col items-center gap-2 p-2 sm:p-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer text-center bg-transparent">
-              <FileUp class="text-primary" size="24" />
-              <span class="text-[10px] sm:text-xs font-medium">PDF</span>
-            </button>
-            <input type="file" ref="pdfInput" accept="application/pdf" @change="handlePdfUpload" class="hidden" />
+      <!-- Price & Date Row -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-group">
+          <label class="text-xs font-medium text-gray-400 ml-1 mb-1 block">Price</label>
+          <div class="relative">
+             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-bold">$</span>
+             <input 
+               v-model="form.price" 
+               type="number" 
+               step="0.01" 
+               placeholder="0.00" 
+               required
+               class="bg-white text-gray-900 placeholder-gray-400 rounded-xl pl-8 pr-4 py-3 w-full border-none focus:ring-2 focus:ring-primary font-mono"
+             />
           </div>
         </div>
-        
-        <!-- Status Indicator -->
-        <div v-if="pdfFile" class="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400">
-          <CheckCircle size="18" />
-          <span class="text-sm font-medium truncate">Ready: {{ fileName }}</span>
-        </div>
 
-        <div v-if="processedPreview" class="preview-box mt-4">
-          <p class="text-xs text-gray-400 mb-2">Scanned Image Preview:</p>
-          <img :src="processedPreview" alt="Processed Preview" class="w-full rounded-lg border border-gray-700 shadow-lg" />
+        <div class="form-group">
+          <label class="text-xs font-medium text-gray-400 ml-1 mb-1 block">Date</label>
+          <div class="relative">
+             <input 
+               v-model="form.purchaseDate" 
+               type="date" 
+               required
+               class="bg-white text-gray-900 placeholder-gray-400 rounded-xl px-4 py-3 w-full border-none focus:ring-2 focus:ring-primary"
+             />
+             <Calendar class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size="18" />
+          </div>
         </div>
-        
-        <p v-if="isProcessing" class="text-center mt-4 text-primary animate-pulse">Processing document...</p>
       </div>
 
-      <button type="submit" class="primary py-3 text-lg" :disabled="isProcessing || showCropper">
-        Save Receipt
+      <!-- Warranty & Category Row -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-group">
+          <label class="text-xs font-medium text-gray-400 ml-1 mb-1 block">Warranty</label>
+          <select 
+            v-model="form.warrantyDuration"
+            class="bg-[#1a2c24] text-gray-300 rounded-xl px-4 py-3 w-full border border-white/10 focus:border-primary appearance-none"
+          >
+            <option value="None">None</option>
+            <option value="1 Year">1 Year</option>
+            <option value="2 Years">2 Years</option>
+            <option value="3 Years">3 Years</option>
+            <option value="Lifetime">Lifetime</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="text-xs font-medium text-gray-400 ml-1 mb-1 block">Category</label>
+          <select 
+            v-model="form.category"
+            class="bg-[#1a2c24] text-gray-300 rounded-xl px-4 py-3 w-full border border-white/10 focus:border-primary appearance-none"
+          >
+            <option value="General">General</option>
+            <option value="Technology">Technology</option>
+            <option value="Groceries">Groceries</option>
+            <option value="Clothing">Clothing</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Attachments Section -->
+      <div class="form-group mt-2">
+        <label class="text-xs font-medium text-gray-400 ml-1 mb-1 block">Add Attachment</label>
+        
+        <div class="grid grid-cols-3 gap-3 mb-4">
+           <!-- Gallery Upload -->
+           <button 
+             type="button" 
+             @click="triggerFileInput('image')" 
+             class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-[#1a2c24] border border-white/5 hover:bg-[#23382f] transition-colors group"
+           >
+             <Image class="text-primary group-hover:scale-110 transition-transform" size="24" />
+             <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Gallery</span>
+           </button>
+           
+           <!-- Camera Capture -->
+           <button 
+             type="button" 
+             @click="triggerCamera" 
+             class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-[#1a2c24] border border-white/5 hover:bg-[#23382f] transition-colors group"
+           >
+             <Camera class="text-primary group-hover:scale-110 transition-transform" size="24" />
+             <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Camera</span>
+           </button>
+
+           <!-- PDF Upload -->
+           <button 
+             type="button" 
+             @click="triggerFileInput('pdf')" 
+             class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-[#1a2c24] border border-white/5 hover:bg-[#23382f] transition-colors group"
+           >
+             <FileText class="text-primary group-hover:scale-110 transition-transform" size="24" />
+             <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">PDF</span>
+           </button>
+        </div>
+
+        <!-- Hidden Inputs -->
+        <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="handleFileChange" />
+        <input ref="cameraInput" type="file" accept="image/*" capture="environment" class="hidden" @change="handleFileChange" />
+        <input ref="pdfInput" type="file" accept="application/pdf" class="hidden" @change="handlePdfChange" />
+
+        <!-- Preview Area -->
+        <div v-if="previewImage || pdfFile" class="relative rounded-xl overflow-hidden border-2 border-dashed border-primary/30 min-h-[150px] bg-[#1a2c24] flex items-center justify-center">
+           <img v-if="previewImage" :src="previewImage" class="w-full h-full object-cover opacity-80" />
+           <div v-else-if="pdfFile" class="text-center p-4">
+              <FileText size="40" class="text-primary mx-auto mb-2" />
+              <p class="text-sm text-white font-medium">{{ pdfFile.name }}</p>
+           </div>
+           
+           <!-- Remove Button -->
+           <button @click="clearAttachment" class="absolute top-2 right-2 bg-black/50 p-1.5 rounded-full hover:bg-red-500/80 transition-colors text-white">
+              <X size="16" />
+           </button>
+        </div>
+        
+        <!-- Empty State Preview -->
+        <div v-else class="rounded-xl border-2 border-dashed border-white/10 min-h-[150px] bg-[#1a2c24] flex flex-col items-center justify-center text-gray-500">
+           <Receipt size="40" class="opacity-20 mb-2" />
+           <p class="text-xs">No receipt attached yet</p>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button 
+        type="submit" 
+        class="mt-4 w-full py-4 bg-primary hover:bg-primary-hover text-black font-bold text-lg rounded-xl shadow-[0_0_20px_rgba(0,255,102,0.3)] transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
+        :disabled="isProcessing"
+      >
+        <span v-if="isProcessing" class="animate-spin rounded-full h-5 w-5 border-b-2 border-black"></span>
+        <span v-else class="flex items-center gap-2"><Save size="20" /> SAVE RECEIPT</span>
       </button>
+
     </form>
+
+    <!-- Cropper Modal -->
+    <div v-if="showCropper" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center p-4">
+      <div class="w-full max-w-lg flex justify-between items-center mb-4 px-2">
+         <button @click="cancelCrop" class="text-white font-medium px-4 py-2 rounded-lg hover:bg-white/10">Cancel</button>
+         <button @click="cropImage" class="bg-primary text-black font-bold px-6 py-2 rounded-lg">Done</button>
+      </div>
+      
+      <div class="relative w-full h-[60vh] bg-[#1a2c24] rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+        <img ref="cropperImg" :src="originalImage" class="max-w-full block" />
+      </div>
+      
+      <p class="text-gray-400 text-sm mt-4 text-center">Drag corners to crop the receipt</p>
+    </div>
+
   </div>
 </template>
 
 <style scoped>
-.cropper-container-wrapper {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-:deep(.cropper-container) {
-  width: 100% !important;
-  height: 100% !important;
-}
-img {
-  max-width: 100%;
-  display: block;
+.form-group input:focus, .form-group select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary);
 }
 </style>
