@@ -147,162 +147,337 @@ const viewPdf = (receipt) => {
 </script>
 
 <template>
-  <div class="receipts-container p-4 pb-24">
-    <div class="header mb-6">
-      <h1 class="text-2xl font-bold mb-4">All Receipts</h1>
+  <div class="container">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <h1>My Receipts</h1>
       
-      <!-- Search Bar -->
-      <div class="relative mb-4">
-        <Search class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size="20" />
+      <div class="search-bar flex-1 max-w-md w-full relative">
         <input 
           v-model="searchQuery" 
-          type="text" 
-          placeholder="Search receipts..." 
-          class="w-full pl-10 pr-4 py-3 rounded-xl border-none bg-[rgba(255,255,255,0.05)] text-white placeholder-gray-500 focus:ring-2 focus:ring-primary"
+          placeholder="Search store, product or category..." 
+          class="pl-10 w-full"
         />
-        <button class="absolute right-3 top-1/2 -translate-y-1/2 bg-[rgba(255,255,255,0.1)] p-2 rounded-lg">
-           <SlidersHorizontal size="16" class="text-primary" />
-        </button>
       </div>
+    </div>
 
-      <!-- Filter Pills -->
-      <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-        <button 
-          v-for="filter in ['All Receipts', 'Active Warranty', 'Expiring', 'Expired']" 
-          :key="filter"
-          class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
-          :class="filter === 'All Receipts' ? 'bg-primary text-black' : 'bg-[rgba(255,255,255,0.05)] text-gray-400 border border-white/10'"
-        >
-          {{ filter }}
-        </button>
+    <!-- Toolbar -->
+    <div class="flex flex-wrap gap-2 mb-6 bg-darker p-2 rounded-lg border border-gray-800">
+      <button @click="toggleSort('purchaseDate')" :class="['sort-btn', { active: sortBy === 'purchaseDate' }]">
+        Date
+      </button>
+      <button @click="toggleSort('storeName')" :class="['sort-btn', { active: sortBy === 'storeName' }]">
+        Store
+      </button>
+      <button @click="toggleSort('price')" :class="['sort-btn', { active: sortBy === 'price' }]">
+        Price
+      </button>
+      <button @click="toggleSort('warrantyExpiryDate')" :class="['sort-btn', { active: sortBy === 'warrantyExpiryDate' }]">
+        Warranty
+      </button>
+      
+      <div class="ml-auto flex items-center gap-2 text-xs text-muted px-2">
+        <span>Order:</span>
+        <span class="text-primary font-bold uppercase">{{ sortOrder }}</span>
       </div>
     </div>
 
     <!-- Receipts List -->
-    <div v-if="loading" class="text-center py-8">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-    </div>
+    <div class="flex flex-col gap-3">
+      <div v-if="filteredReceipts.length === 0" class="text-center py-12 text-muted">
+        No receipts found matching your criteria.
+      </div>
 
-    <div v-else-if="filteredReceipts.length === 0" class="text-center py-12 text-muted">
-      <p>No receipts found.</p>
-    </div>
-
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div 
         v-for="receipt in filteredReceipts" 
         :key="receipt.id" 
-        class="receipt-card relative flex items-stretch min-h-[100px]"
+        class="receipt-row-card"
+        :class="{ 'editing': editingReceipt === receipt.id }"
       >
-        <!-- Left Color Bar (Status) -->
-        <div 
-          class="w-3 rounded-l-xl"
-          :class="isExpired(receipt.warrantyExpiryDate) ? 'bg-red-500' : 'bg-primary'"
-        ></div>
-
-        <!-- Main Card Body -->
-        <div class="flex-1 bg-white p-4 flex flex-col justify-between rounded-r-sm shadow-lg text-gray-900">
-           <div class="flex justify-between items-start mb-2">
-              <div>
-                 <h3 class="font-bold text-lg leading-tight">{{ receipt.storeName }}</h3>
-                 <p class="text-xs text-gray-400 font-mono mt-1">{{ formatDate(receipt.purchaseDate) }}</p>
+        <!-- Standard View -->
+        <template v-if="editingReceipt !== receipt.id">
+          <div class="receipt-content">
+            <div class="main-info">
+              <div class="store-info">
+                <h3 class="store-name">{{ receipt.storeName }}</h3>
+                <p class="product-name">{{ receipt.productName }}</p>
               </div>
-              <div 
-                class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide border"
-                :class="isExpired(receipt.warrantyExpiryDate) ? 'text-red-500 border-red-200 bg-red-50' : 'text-primary border-green-200 bg-green-50'"
-              >
-                 {{ isExpired(receipt.warrantyExpiryDate) ? 'Expired' : 'Valid Warranty' }}
+              
+              <div class="details-grid">
+                <div class="detail-item">
+                  <Calendar size="14" />
+                  <span>{{ formatDate(receipt.purchaseDate) }}</span>
+                </div>
+                <div class="detail-item">
+                  <Tag size="14" />
+                  <span>{{ receipt.category }}</span>
+                </div>
+                <div class="detail-item expiry" :class="{ 'soon': isSoon(receipt.warrantyExpiryDate) }">
+                  <Clock size="14" />
+                  <span>Ends: {{ formatDate(receipt.warrantyExpiryDate) }}</span>
+                </div>
               </div>
-           </div>
-           
-           <div class="flex justify-between items-end">
-              <span class="text-gray-400 text-xs font-mono">#{{ receipt.id.toString().padStart(4, '0') }}</span>
-              <span class="text-2xl font-bold tracking-tight">{{ receipt.price }}</span>
-           </div>
-        </div>
-
-        <!-- Right Jagged Edge (Pure CSS) -->
-        <div class="jagged-edge"></div>
-      </div>
-    </div>
-
-    <!-- Edit Modal -->
-    <div v-if="editingReceipt" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div class="bg-[#12281e] w-full max-w-md rounded-2xl p-6 border border-white/10 shadow-2xl">
-        <h2 class="text-xl font-bold mb-4 text-white">Edit Receipt</h2>
-        
-        <form @submit.prevent="saveEdit" class="flex flex-col gap-4">
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">Store Name</label>
-            <input v-model="editingReceipt.storeName" type="text" required class="bg-white text-gray-900" />
-          </div>
-          
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs text-gray-400 mb-1">Price</label>
-              <input v-model="editingReceipt.price" type="number" step="0.01" required class="bg-white text-gray-900" />
             </div>
-            <div>
-               <label class="block text-xs text-gray-400 mb-1">Category</label>
-               <input v-model="editingReceipt.category" type="text" class="bg-white text-gray-900" />
+
+            <div class="price-section">
+              <span class="price-val">{{ formatPrice(receipt.price) }}</span>
+            </div>
+
+            <div class="actions">
+              <button @click="viewPdf(receipt)" class="icon-btn" title="View PDF">
+                <FileText size="18" />
+              </button>
+              <button @click="startEdit(receipt)" class="icon-btn" title="Edit">
+                <Edit2 size="18" />
+              </button>
+              <button @click="store.deleteReceipt(receipt.id)" class="icon-btn danger" title="Delete">
+                <Trash2 size="18" />
+              </button>
             </div>
           </div>
+        </template>
 
-          <div class="flex gap-3 mt-4">
-            <button type="button" @click="cancelEdit" class="flex-1 py-3 bg-transparent border border-white/20 text-white rounded-xl">Cancel</button>
-            <button type="submit" class="flex-1 py-3 bg-primary text-black font-bold rounded-xl">Save Changes</button>
+        <!-- Edit View -->
+        <template v-else>
+          <div class="edit-form-grid">
+            <div class="field">
+              <label>Store</label>
+              <input v-model="editForm.storeName" />
+            </div>
+            <div class="field">
+              <label>Product</label>
+              <input v-model="editForm.productName" />
+            </div>
+            <div class="field">
+              <label>Date</label>
+              <input v-model="editForm.purchaseDate" type="date" />
+            </div>
+            <div class="field">
+              <label>Price</label>
+              <input v-model="editForm.price" type="number" step="0.01" />
+            </div>
+            <div class="field">
+              <label>Category</label>
+              <select v-model="editForm.category">
+                <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Warranty</label>
+              <select v-model="editForm.warrantyDuration">
+                <option v-for="dur in warranties" :key="dur" :value="dur">{{ dur }}</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label>Update PDF (optional)</label>
+              <input type="file" @change="handleEditFileUpload" accept="application/pdf,image/*" />
+            </div>
+            <div class="edit-actions full">
+              <button @click="cancelEdit" class="secondary flex items-center gap-1">
+                <X size="16" /> Cancel
+              </button>
+              <button @click="saveEdit" class="primary flex items-center gap-1" :disabled="isUpdating">
+                <Check size="16" /> {{ isUpdating ? 'Saving...' : 'Save Changes' }}
+              </button>
+            </div>
           </div>
-        </form>
+        </template>
       </div>
     </div>
-
   </div>
 </template>
 
+<script>
+// Helper for expiry warning
+const isSoon = (dateStr) => {
+  if (!dateStr) return false;
+  const expiry = new Date(dateStr);
+  const now = new Date();
+  const diffTime = expiry - now;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+  return diffDays > 0 && diffDays < 30;
+};
+</script>
+
 <style scoped>
-.receipt-card {
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
-  transition: transform 0.2s;
+.receipt-row-card {
+  background: var(--color-surface); /* Plava boja kao sidebar/navbar */
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  transition: all 0.2s ease;
+  overflow: hidden;
 }
 
-.receipt-card:active {
-  transform: scale(0.98);
+.receipt-row-card:hover {
+  background: #1e293b; /* Malo svetlija nijansa plave za hover */
+  border-color: var(--color-primary);
+  transform: translateX(4px);
 }
 
-.jagged-edge {
-  width: 20px;
-  background: #fff;
-  position: relative;
-  background-image: linear-gradient(135deg, transparent 50%, #fff 50%), linear-gradient(225deg, transparent 50%, #fff 50%);
-  background-position: top left, top left;
-  background-size: 20px 20px;
-  background-repeat: repeat-y;
-  /* This creates the jagged effect pointing outwards */
-  mask-image: linear-gradient(to right, black 50%, transparent 50%);
-  -webkit-mask-image: linear-gradient(to right, black 50%, transparent 50%);
-  /* Actually, simpler approach for "receipt tear" look: */
-  background: radial-gradient(circle at 10px 50%, transparent 10px, #fff 11px);
-  background-size: 20px 20px;
-  background-position: -10px 0;
+.receipt-row-card.editing {
+  border-color: var(--color-primary);
+  background: var(--color-bg-darker);
+  transform: none;
 }
 
-/* Redefining the jagged edge properly */
-.receipt-card::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  right: -10px;
-  width: 10px;
-  background-size: 10px 20px;
-  background-repeat: repeat-y;
-  background-image: linear-gradient(45deg, transparent 50%, #fff 50%), linear-gradient(135deg, #fff 50%, transparent 50%);
+.receipt-content {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  gap: 1.5rem;
 }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+.main-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
 }
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+
+.store-info {
+  min-width: 180px;
+}
+
+.store-name {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+}
+
+.product-name {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin: 0.1rem 0 0 0;
+}
+
+.details-grid {
+  display: flex;
+  gap: 1.5rem;
+  flex: 1;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.detail-item.expiry.soon {
+  color: #fbbf24;
+}
+
+.price-section {
+  min-width: 100px;
+  text-align: right;
+}
+
+.price-val {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--color-primary);
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.sort-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.sort-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+.sort-btn.active {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+/* Edit Form Styles */
+.edit-form-grid {
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.field.full {
+  grid-column: span 3;
+}
+
+.field label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  font-weight: bold;
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .main-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .details-grid {
+    flex-wrap: wrap;
+    gap: 0.8rem;
+  }
+  .edit-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .field.full {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .receipt-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .price-section {
+    text-align: left;
+    min-width: unset;
+  }
+  .actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .edit-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .field.full {
+    grid-column: span 1;
+  }
 }
 </style>

@@ -4,15 +4,13 @@
   font-weight: 400;
 
   color-scheme: dark;
-  --color-bg: #09130f; /* Deep Dark Green */
-  --color-surface: #12281e; /* Lighter Green Surface */
-  --color-primary: #00ff66; /* Vibrant Neon Green */
-  --color-primary-hover: #00cc52;
-  --color-primary-soft: rgba(0, 255, 102, 0.1);
+  --color-bg: #020617; /* Almost black / dark blue */
+  --color-surface: #0f172a; /* Slightly lighter */
+  --color-primary: #38bdf8; /* Light blue */
+  --color-primary-hover: #0ea5e9;
   --color-text: #f1f5f9;
-  --color-text-dark: #1e293b; /* For white cards */
   --color-text-muted: #94a3b8;
-  --color-border: #1e3a2f;
+  --color-border: #1e293b;
 
   color: var(--color-text);
   background-color: var(--color-bg);
@@ -54,11 +52,11 @@ h1, h2, h3 {
 }
 
 button {
-  border-radius: 12px;
+  border-radius: 8px;
   border: 1px solid transparent;
-  padding: 0.8em 1.5em;
+  padding: 0.6em 1.2em;
   font-size: 1em;
-  font-weight: 600;
+  font-weight: 500;
   font-family: inherit;
   background-color: var(--color-surface);
   color: var(--color-text);
@@ -68,38 +66,30 @@ button {
 button:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
-  background-color: rgba(0, 255, 102, 0.05);
 }
 button.primary {
   background-color: var(--color-primary);
-  color: #05100b; /* Dark text on green button */
-  font-weight: 700;
-  box-shadow: 0 4px 14px 0 rgba(0, 255, 102, 0.39);
+  color: var(--color-bg);
+  font-weight: 600;
 }
 button.primary:hover {
   background-color: var(--color-primary-hover);
-  color: #05100b;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 255, 102, 0.23);
+  color: white;
 }
 
 input, select {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  color: #1e293b;
-  padding: 0.8em 1em;
-  border-radius: 12px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  padding: 0.6em;
+  border-radius: 6px;
   font-size: 1em;
   width: 100%;
   box-sizing: border-box;
-  font-weight: 500;
 }
 input:focus, select:focus {
   outline: 2px solid var(--color-primary);
   border-color: transparent;
-}
-input::placeholder {
-  color: #94a3b8;
 }
 
 /* Utilities */
@@ -107,15 +97,6 @@ input::placeholder {
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem;
-}
-
-/* Glassmorphism Helper */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
 }
 .flex { display: flex; }
 .flex-col { flex-direction: column; }
