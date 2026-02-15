@@ -26,7 +26,7 @@ const isActive = (path) => route.path === path;
   <div class="dashboard-layout flex h-screen bg-[#09130f] text-white overflow-hidden">
     
     <!-- Sidebar (Desktop) -->
-    <aside class="hidden lg:flex flex-col w-64 border-r border-white/10 p-6 glass-sidebar">
+    <aside class="hidden md:flex flex-col w-64 border-r border-white/10 p-6 glass-sidebar">
       <div class="flex items-center gap-3 mb-10 px-2">
         <div class="bg-primary/20 p-2 rounded-lg">
            <Receipt class="text-primary" />
@@ -62,20 +62,20 @@ const isActive = (path) => route.path === path;
     <!-- Main Content -->
     <main class="flex-1 overflow-y-auto relative">
       <!-- Header Mobile -->
-      <div class="lg:hidden flex justify-between items-center p-4 sticky top-0 bg-[#09130f]/80 backdrop-blur-md z-30">
+      <div class="md:hidden flex justify-between items-center p-4 sticky top-0 bg-[#09130f]/80 backdrop-blur-md z-30">
         <h1 class="font-bold text-lg">RISY</h1>
         <div class="w-8 h-8 bg-gray-700 rounded-full overflow-hidden">
            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Avatar" />
         </div>
       </div>
 
-      <div class="max-w-3xl mx-auto w-full">
+      <div class="w-full px-4 md:px-8 md:max-w-7xl mx-auto">
         <RouterView />
       </div>
     </main>
 
     <!-- Bottom Navigation (Mobile) -->
-    <nav class="lg:hidden fixed bottom-6 left-6 right-6 bg-[#12281e]/90 backdrop-blur-lg border border-white/10 rounded-2xl flex justify-between items-center px-6 py-4 shadow-2xl z-40">
+    <nav class="md:hidden fixed bottom-6 left-6 right-6 bg-[#12281e]/90 backdrop-blur-lg border border-white/10 rounded-2xl flex justify-between items-center px-6 py-4 shadow-2xl z-40">
       <router-link to="/receipts" class="mobile-nav-item" :class="{ active: isActive('/receipts') }">
         <Home size="24" />
       </router-link>

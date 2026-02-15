@@ -287,7 +287,7 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <div class="create-receipt p-6 pb-24 max-w-lg mx-auto">
+  <div class="create-receipt p-6 pb-24 w-full max-w-lg md:max-w-5xl mx-auto">
     <!-- Header -->
     <div class="flex items-center gap-4 mb-6">
       <button @click="$router.back()" class="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors">
@@ -296,7 +296,9 @@ const handleSubmit = async () => {
       <h1 class="text-xl font-bold text-white">Add New Receipt</h1>
     </div>
 
-    <form @submit.prevent="handleSubmit" class="flex flex-col gap-5">
+    <form @submit.prevent="handleSubmit" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+      <!-- Left Column: Inputs -->
+      <div class="flex flex-col gap-5">
       
       <!-- Store Name -->
       <div class="form-group">
@@ -384,6 +386,10 @@ const handleSubmit = async () => {
       </div>
 
       <!-- Attachments Section -->
+      </div>
+      
+      <!-- Right Column: Attachments -->
+      <div class="flex flex-col gap-5">
       <div class="form-group mt-2">
         <label class="text-xs font-medium text-gray-400 ml-1 mb-1 block">Add Attachment</label>
         
@@ -446,14 +452,18 @@ const handleSubmit = async () => {
       </div>
 
       <!-- Submit Button -->
+      <div class="md:col-span-2 mt-4">
       <button 
         type="submit" 
-        class="mt-4 w-full py-4 bg-primary hover:bg-primary-hover text-black font-bold text-lg rounded-xl shadow-[0_0_20px_rgba(0,255,102,0.3)] transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
+        class="w-full py-4 bg-primary hover:bg-primary-hover text-black font-bold text-lg rounded-xl shadow-[0_0_20px_rgba(0,255,102,0.3)] transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2"
         :disabled="isProcessing"
       >
         <span v-if="isProcessing" class="animate-spin rounded-full h-5 w-5 border-b-2 border-black"></span>
         <span v-else class="flex items-center gap-2"><Save size="20" /> SAVE RECEIPT</span>
       </button>
+      </div>
+      
+      </div> <!-- End of Right Column -->
 
     </form>
 
