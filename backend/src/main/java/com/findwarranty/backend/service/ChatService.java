@@ -31,7 +31,7 @@ public class ChatService {
     @Value("${qwen.api.base-url:}")
     private String baseUrl;
 
-    @Value("${qwen.model-name:qwen2.5-32b-instruct}")
+    @Value("${qwen.model-name:qwen/qwen3-32b}")
     private String modelName;
 
     private final RestTemplate restTemplate = new RestTemplate();
@@ -88,8 +88,8 @@ public class ChatService {
     }
 
     private String callAiApi(List<Map<String, String>> messages) {
-        if (apiKey == null || apiKey.isEmpty()) {
-            return "AI API key not configured. Please add QWEN_API_KEY to your environment.";
+        if (apiKey == null || apiKey.trim().isEmpty() || apiKey.startsWith("${")) {
+            return "AI API key not configured. Please add your Groq API key to 'qwen.api.key' in application.properties file. Currently it is: '" + apiKey + "'";
         }
 
         try {
