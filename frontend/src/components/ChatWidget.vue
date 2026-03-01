@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/auth';
 import { MessageSquare, X, Send, Trash2, Bot, User } from 'lucide-vue-next';
 
 const authStore = useAuthStore();
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 const isOpen = ref(false);
 const messages = ref([]);
 const newMessage = ref('');
@@ -14,7 +15,7 @@ const chatContainer = ref(null);
 const fetchHistory = async () => {
   if (!authStore.user) return;
   try {
-    const response = await fetch(`http://localhost:8080/api/chat/history/${authStore.user.username}`);
+    const response = await fetch(`${API_URL}/api/chat/history/${authStore.user.username}`);
     if (response.ok) {
       messages.value = await response.json();
       scrollToBottom();
@@ -40,7 +41,7 @@ const sendMessage = async () => {
   scrollToBottom();
 
   try {
-    const response = await fetch('http://localhost:8080/api/chat/send', {
+    const response = await fetch(`${API_URL}/api/chat/send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -70,7 +71,7 @@ const sendMessage = async () => {
 const clearChat = async () => {
   if (!confirm('Clear chat history?')) return;
   try {
-    await fetch(`http://localhost:8080/api/chat/clear/${authStore.user.username}`, { method: 'DELETE' });
+    await fetch(`${API_URL}/api/chat/clear/${authStore.user.username}`, { method: 'DELETE' });
     messages.value = [];
   } catch (err) {
     console.error('Clear chat error:', err);
