@@ -14,12 +14,12 @@ import java.util.*;
 
 /**
  * Prepoznavanje podataka sa računa (slika ili PDF) pomoću Google Gemini API
- * (najjeftiniji model: gemini-1.5-flash).
+ * (najjeftiniji model: gemini-2.5-flash-lite).
  */
 @Service
 public class GeminiReceiptService {
 
-    private static final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    private static final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent";
 
     private static final String EXTRACT_PROMPT = """
         Ovo je slika ili PDF računa (receipt). Izvuci sledeće podatke i vrati SAMO validan JSON bez markdown oznaka, bez dodatnog teksta:
