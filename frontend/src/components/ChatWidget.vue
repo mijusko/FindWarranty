@@ -109,15 +109,23 @@ onMounted(() => {
     </button>
 
     <!-- Chat Window -->
-    <div v-if="isOpen" class="chat-window shadow-lg">
+    <div class="chat-window shadow-lg" :class="{ 'is-open': isOpen }">
       <div class="chat-header">
         <div class="header-info">
-          <Bot size="20" class="text-primary" />
-          <span>Financial Advisor (Qwen)</span>
+          <Bot size="24" class="text-primary" />
+          <div class="advisor-title">
+            <span class="advisor-name">Financial Advisor</span>
+            <span class="advisor-status">Always online</span>
+          </div>
         </div>
-        <button @click="clearChat" title="Clear History" class="clear-btn">
-          <Trash2 size="16" />
-        </button>
+        <div class="header-actions">
+          <button @click="clearChat" title="Clear History" class="action-btn">
+            <Trash2 size="18" />
+          </button>
+          <button @click="toggleChat" title="Close Chat" class="action-btn close-desktop">
+            <X size="20" />
+          </button>
+        </div>
       </div>
 
       <div ref="chatContainer" class="chat-messages">
@@ -167,118 +175,184 @@ onMounted(() => {
 <style scoped>
 .chat-widget {
   position: fixed;
-  top: 1rem;
-  right: 1rem;
+  top: 0;
+  right: 0;
+  height: 100vh;
   z-index: 1000;
+  pointer-events: none; /* Let clicks pass through to background when closed */
 }
 
 .chat-toggle-btn {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
   width: 3.5rem;
   height: 3.5rem;
   border-radius: 50%;
-  background-color: var(--primary);
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 1001;
+  pointer-events: auto;
 }
 
 .chat-toggle-btn:hover {
-  transform: scale(1.05);
-  background-color: var(--primary-hover);
+  transform: scale(1.1) rotate(5deg);
+  background-color: var(--color-primary-hover);
+  color: white;
 }
 
 .chat-toggle-btn.is-open {
-  background-color: var(--bg-card);
-  color: var(--text-muted);
+  background-color: #ef4444;
+  color: white;
+  transform: rotate(90deg);
 }
 
 .chat-window {
-  position: absolute;
-  top: 4.5rem;
+  position: fixed;
+  top: 0;
   right: 0;
-  width: 20rem;
-  height: 28rem;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 1rem;
+  width: 400px;
+  height: 100vh;
+  background-color: var(--color-bg);
+  border-left: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  box-shadow: -10px 0 50px rgba(0, 0, 0, 0.8);
+  pointer-events: auto;
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.chat-window.is-open {
+  transform: translateX(0);
+}
+
+/* Desktop sizing */
+@media (min-width: 769px) {
+  .chat-window {
+    width: 450px;
+  }
+}
+
+/* Mobile full-screen */
 @media (max-width: 768px) {
   .chat-window {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
     width: 100%;
-    height: 100%;
-    border-radius: 0;
-    z-index: 1001;
+    border-left: none;
   }
-  .chat-widget {
+  
+  .chat-toggle-btn {
     top: auto;
-    bottom: 5.5rem; /* Above bottom bar */
-    right: 1rem;
+    bottom: 6rem; /* Above mobile bottom bar */
+    right: 1.5rem;
   }
 }
 
 .chat-header {
-  padding: 1rem;
-  background-color: var(--bg-darker);
-  border-bottom: 1px solid var(--border-color);
+  padding: 1.5rem;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-btn {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  color: var(--color-text-muted);
+  background: transparent;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn:hover {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+.action-btn.close-desktop {
+  color: #ef4444;
+}
+
+.action-btn.close-desktop:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+@media (max-width: 768px) {
+  .close-desktop {
+    display: none;
+  }
+}
+
 .header-info {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-  font-size: 0.9rem;
+  gap: 0.75rem;
 }
 
-.clear-btn {
-  padding: 0.4rem;
-  border-radius: 0.4rem;
-  color: var(--text-muted);
-  background: transparent;
+.advisor-title {
+  display: flex;
+  flex-direction: column;
 }
 
-.clear-btn:hover {
-  background-color: rgba(255, 0, 0, 0.1);
-  color: #ff4d4d;
+.advisor-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.advisor-status {
+  font-size: 0.75rem;
+  color: #22c55e;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.advisor-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background-color: #22c55e;
+  border-radius: 50%;
+  display: inline-block;
 }
 
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  background-color: var(--bg-card);
-}
-
-.empty-state {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  margin-top: 2rem;
-  padding: 0 1rem;
+  gap: 1.25rem;
+  background-color: var(--color-bg);
+  background-image: radial-gradient(var(--color-border) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
 .message-wrapper {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
   max-width: 85%;
+  animation: messageFadeIn 0.3s ease-out;
+}
+
+@keyframes messageFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .message-wrapper.user {
@@ -287,99 +361,111 @@ onMounted(() => {
 }
 
 .message-icon {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 2rem;
+  height: 2rem;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background-color: var(--bg-darker);
-  color: var(--text-muted);
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 
 .user .message-icon {
-  background-color: var(--primary);
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-bg);
 }
 
 .message-content {
-  padding: 0.6rem 0.8rem;
-  border-radius: 0.8rem;
-  font-size: 0.85rem;
-  line-height: 1.4;
-  white-space: pre-wrap;
+  padding: 0.8rem 1rem;
+  border-radius: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
 .user .message-content {
-  background-color: var(--primary);
-  color: white;
-  border-bottom-right-radius: 0;
+  background-color: var(--color-primary);
+  color: var(--color-bg);
+  border-top-right-radius: 0.2rem;
+  font-weight: 500;
 }
 
 .assistant .message-content {
-  background-color: var(--bg-darker);
-  color: var(--text-main);
-  border-bottom-left-radius: 0;
-}
-
-.loading .message-content {
-  color: var(--text-muted);
-  font-style: italic;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border-top-left-radius: 0.2rem;
 }
 
 .chat-footer {
-  padding: 0.8rem;
-  background-color: var(--bg-darker);
-  border-top: 1px solid var(--border-color);
+  padding: 1.25rem;
+  background-color: var(--color-surface);
+  border-top: 1px solid var(--color-border);
 }
 
 .context-options {
-  margin-bottom: 0.6rem;
+  margin-bottom: 1rem;
+  padding: 0.6rem;
+  background: var(--color-bg);
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border);
 }
 
 .receipts-context {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.75rem;
-  color: var(--text-muted);
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
   cursor: pointer;
-}
-
-.receipts-context input {
-  width: 0.8rem;
-  height: 0.8rem;
 }
 
 .input-area {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .input-area input {
   flex: 1;
-  padding: 0.6rem 0.8rem;
+  padding: 0.8rem 1.2rem;
   border-radius: 2rem;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  font-size: 0.85rem;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 0.95rem;
+  transition: all 0.3s;
+}
+
+.input-area input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+  outline: none;
 }
 
 .input-area button {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 3rem;
+  height: 3rem;
   border-radius: 50%;
-  background-color: var(--primary);
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-bg);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.input-area button:hover:not(:disabled) {
+  transform: scale(1.1);
+  background-color: var(--color-primary-hover);
+  color: white;
 }
 
 .input-area button:disabled {
-  opacity: 0.5;
-  background-color: var(--text-muted);
+  opacity: 0.4;
+  background-color: var(--color-text-muted);
 }
 </style>
