@@ -84,5 +84,30 @@ export const useReceiptStore = defineStore('receipts', () => {
     }
   };
 
-  return { receipts, fetchReceipts, createReceipt, deleteReceipt, updateReceipt };
+  /**
+   * Extract receipt data from image or PDF using OCR.
+   * Returns { success, data } where data has storeName, productName, purchaseDate, price.
+   * User can edit the form after and then save.
+   */
+  const extractReceiptData = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch(`${API_URL}/api/receipts/ocr`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return { success: true, data };
+      } else {
+        const errorText = await response.text();
+        return { success: false, error: errorText };
+      }
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  };
+
+  return { receipts, fetchReceipts, createReceipt, deleteReceipt, updateReceipt, extractReceiptData };
 });

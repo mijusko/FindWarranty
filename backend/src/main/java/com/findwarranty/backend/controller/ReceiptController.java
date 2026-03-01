@@ -4,6 +4,8 @@ import com.findwarranty.backend.model.Receipt;
 import com.findwarranty.backend.model.User;
 import com.findwarranty.backend.repository.ReceiptRepository;
 import com.findwarranty.backend.repository.UserRepository;
+import com.findwarranty.backend.dto.OcrReceiptDto;
+import com.findwarranty.backend.service.GeminiReceiptService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +25,34 @@ public class ReceiptController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private GeminiReceiptService geminiReceiptService;
+
+    @PostMapping("/ocr")
+    public ResponseEntity<?> extractReceiptFromImage(
+            @RequestParam("file") MultipartFile file
+    ) {
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body("No file provided");
+        }
+        String contentType = file.getContentType();
+        boolean isPdf = contentType != null && contentType.contains("pdf");
+        boolean isImage = contentType != null && (contentType.startsWith("image/"));
+        if (!isPdf && !isImage) {
+            return ResponseEntity.badRequest().body("File must be an image or PDF");
+        }
+        try {
+            OcrReceiptDto dto = geminiReceiptService.extractReceiptData(file);
+            return ResponseEntity.ok(dto);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("OCR failed: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
+    }
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getUserReceipts(@PathVariable Long userId) {

@@ -24,6 +24,7 @@ const processedPreview = ref(null); // Used for final B/W preview
 const pdfFile = ref(null);
 const fileName = ref('');
 const isProcessing = ref(false);
+const isOcrLoading = ref(false);
 const showCropper = ref(false);
 const isCropperReady = ref(false);
 const cropperImgRef = ref(null);
@@ -229,6 +230,32 @@ onUnmounted(() => {
   if (cropperInstance.value) cropperInstance.value.destroy();
 });
 
+const runOcr = async () => {
+  const file = pdfFile.value;
+  if (!file) {
+    alert('Prvo dodajte sliku ili PDF računa.');
+    return;
+  }
+  try {
+    isOcrLoading.value = true;
+    const result = await store.extractReceiptData(file);
+    if (result.success && result.data) {
+      const d = result.data;
+      if (d.storeName != null) form.value.storeName = d.storeName;
+      if (d.productName != null) form.value.productName = d.productName;
+      if (d.purchaseDate != null) form.value.purchaseDate = d.purchaseDate;
+      if (d.price != null) form.value.price = d.price;
+    } else {
+      alert('Prepoznavanje nije uspelo: ' + (result.error || 'Nepoznata greška. Proverite da li je Gemini API ključ podešen.'));
+    }
+  } catch (e) {
+    console.error('Gemini extract error:', e);
+    alert('Greška pri prepoznavanju: ' + e.message);
+  } finally {
+    isOcrLoading.value = false;
+  }
+};
+
 const handleSubmit = async () => {
   try {
     isProcessing.value = true;
@@ -352,6 +379,15 @@ const handleSubmit = async () => {
         <div v-if="pdfFile" class="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400">
           <CheckCircle size="18" />
           <span class="text-sm font-medium truncate">Ready: {{ fileName }}</span>
+        </div>
+
+        <div v-if="pdfFile" class="mt-3">
+          <button type="button" @click="runOcr" :disabled="isOcrLoading" class="secondary w-full sm:w-auto flex items-center justify-center gap-2 py-2.5 px-4">
+            <ImageIcon v-if="!isOcrLoading" size="20" />
+            <span v-if="isOcrLoading" class="animate-pulse">Prepoznavanje...</span>
+            <span v-else>Prepoznaj podatke sa slike/PDF</span>
+          </button>
+          <p class="text-xs text-gray-400 mt-2">Podaci će biti popunjeni u formi iznad. Možete ih izmeniti pre čuvanja.</p>
         </div>
 
         <div v-if="processedPreview" class="preview-box mt-4">
