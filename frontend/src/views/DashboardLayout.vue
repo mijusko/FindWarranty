@@ -3,6 +3,7 @@ import { RouterView, RouterLink } from 'vue-router';
 import { Receipt, PlusCircle, User } from 'lucide-vue-next';
 import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
+import ChatWidget from '../components/ChatWidget.vue';
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -15,6 +16,9 @@ const logout = () => {
 
 <template>
   <div class="dashboard-layout">
+    <!-- AI Advisor Chat Widget -->
+    <ChatWidget />
+
     <!-- Desktop Sidebar -->
     <nav class="sidebar hidden md-flex">
       <div class="logo">FW</div>
